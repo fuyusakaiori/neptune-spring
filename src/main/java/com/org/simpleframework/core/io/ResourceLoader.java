@@ -2,7 +2,7 @@ package com.org.simpleframework.core.io;
 
 /**
  * <h2>负责读取资源实例</h2>
- * <h3></h3>
+ * <h3>注: 根据路径格式的不同创建对应的 Resource 实例</h3>
  */
 public interface ResourceLoader {
 

@@ -30,7 +30,6 @@ public class UrlResource implements Resource{
         URLConnection connection = this.url.openConnection();
         // 2. 开始建立连接, 然后可以可以从远程连接获取相应的数据
         try {
-            connection.connect();
             return connection.getInputStream();
         }
         catch (IOException e) {

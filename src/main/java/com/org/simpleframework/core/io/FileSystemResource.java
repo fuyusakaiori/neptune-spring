@@ -1,30 +1,33 @@
 package com.org.simpleframework.core.io;
 
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * <h3>注: 不仅提过获取资源的方法, 还有其他很多修改资源的方法</h3>
- * <h3>注: 我算是看出来了, 这三种其实都是加载文件, 就是用的 API 不同而已</h3>
+ * <h3>通过文件的绝对路径定位配置文件所在的位置</h3>
  */
 public class FileSystemResource implements Resource{
 
+    /**
+     * <h3>配置文件路径</h3>
+     */
     private final String path;
 
+    /**
+     * <h3>配置文件对象</h3>
+     */
     private final File file;
 
     /**
-     * <h3>这里主要用来获取文件对应的输入流</h3>
      * <h3>注: JDK 7 之后提供的工具类</h3>
      */
     private final Path filePath;
 
-
+    /**
+     * <h3>初始化方法</h3>
+     */
     public FileSystemResource(String path) {
         this.path = path;
         this.file = new File(path);

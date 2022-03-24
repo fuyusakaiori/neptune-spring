@@ -17,10 +17,6 @@ import java.io.InputStream;
 @Slf4j
 public class XmlBeanDefinitionReader extends AbstractBeanDefinitionReader {
 
-    public XmlBeanDefinitionReader(BeanDefinitionRegistry registry) {
-        super(registry);
-    }
-
     public XmlBeanDefinitionReader(BeanDefinitionRegistry registry, ResourceLoader resourceLoader) {
         super(registry, resourceLoader);
     }

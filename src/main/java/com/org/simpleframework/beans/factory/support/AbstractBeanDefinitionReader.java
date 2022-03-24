@@ -21,10 +21,6 @@ public abstract class AbstractBeanDefinitionReader
      */
     private ResourceLoader resourceLoader;
 
-    public AbstractBeanDefinitionReader(BeanDefinitionRegistry registry) {
-        this.registry = registry;
-    }
-
     public AbstractBeanDefinitionReader(BeanDefinitionRegistry registry, ResourceLoader resourceLoader) {
         this.registry = registry;
         this.resourceLoader = resourceLoader;

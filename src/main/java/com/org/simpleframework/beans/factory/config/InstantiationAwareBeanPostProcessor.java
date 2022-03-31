@@ -16,9 +16,7 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
      * @param beanName Bean 名字
      * @return Bean 实例
      */
-    default Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
-        return null;
-    }
+    Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException;
 
     /**
      * <h3>在执行初始化方法之后执行</h3>
@@ -26,9 +24,7 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
      * @param beanName Bean 名字
      * @return 是否处理成功
      */
-    default boolean postProcessAfterInstantiation(Object bean, String beanName) throws BeansException{
-        return true;
-    }
+     boolean postProcessAfterInstantiation(Object bean, String beanName) throws BeansException;
 
     /**
      * <h3>在注入属性之前处理需要使用的属性</h3>
@@ -37,8 +33,6 @@ public interface InstantiationAwareBeanPostProcessor extends BeanPostProcessor {
      * @param beanName Bean 名字
      * @return 处理后的属性集合
      */
-    default PropertyValues postProcessPropertyValues(PropertyValues propertyValues, Object bean, String beanName) throws BeansException{
-        return null;
-    }
+    PropertyValues postProcessPropertyValues(PropertyValues propertyValues, Object bean, String beanName) throws BeansException;
 
 }

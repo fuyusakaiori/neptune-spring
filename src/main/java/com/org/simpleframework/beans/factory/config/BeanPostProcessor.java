@@ -9,15 +9,11 @@ public interface BeanPostProcessor {
     /**
      * <h3>Bean 实例创建前调用的方法</h3>
      */
-    default Object postProcessBeforeInitialization(String beanName, Object bean){
-        return bean;
-    }
+     Object postProcessBeforeInitialization(String beanName, Object bean);
 
     /**
      * <h3>Bean 实例创建后调用的方法</h3>
      */
-    default Object postProcessAfterInitialization(String beanName, Object bean){
-        return bean;
-    }
+    Object postProcessAfterInitialization(String beanName, Object bean);
 
 }

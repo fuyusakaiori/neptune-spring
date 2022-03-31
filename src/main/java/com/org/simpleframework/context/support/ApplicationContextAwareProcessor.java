@@ -28,8 +28,7 @@ public class ApplicationContextAwareProcessor implements BeanPostProcessor {
     }
 
     @Override
-    public Object postProcessAfterInitialization(String beanName, Object bean)
-    {
-        return null;
+    public Object postProcessAfterInitialization(String beanName, Object bean) {
+        return bean;
     }
 }

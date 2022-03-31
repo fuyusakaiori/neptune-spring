@@ -188,17 +188,6 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         return bean;
     }
 
-
-    /**
-     * <h3>判断自身是否包含 Bean 实例</h3>
-     * @param beanName Bean 实例的名字
-     * @return 是否包含
-     */
-    @Override
-    public boolean containsLocalBean(String beanName) {
-        return containsBean(beanName) || containsBeanDefinition(beanName);
-    }
-
     /**
      * <h3>判断是否有 Bean 实例的扩展实现</h3>
      * @param beanName 对象的名字
@@ -207,7 +196,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
     @Override
     public boolean containsBean(String beanName) {
         // 1. 检查注册中心是否有单例 Bean 或者是否有对应的 BeanDefinition 实例
-        if (containsLocalBean(beanName)) return true;
+        if (containsSingleton(beanName) || containsBeanDefinition(beanName)) return true;
         // 2. 如果没有找到, 可以考虑从父容器中获得
         BeanFactory parentBeanFactory = getParentBeanFactory();
         return (parentBeanFactory != null && parentBeanFactory.containsBean(beanName));

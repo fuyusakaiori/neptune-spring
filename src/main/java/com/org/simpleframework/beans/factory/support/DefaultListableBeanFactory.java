@@ -1,11 +1,9 @@
 package com.org.simpleframework.beans.factory.support;
 
 import com.org.simpleframework.beans.exception.BeanDefinitionException;
-import com.org.simpleframework.beans.exception.NoSuchBeanDefinitionException;
 import com.org.simpleframework.beans.factory.config.BeanDefinition;
 import com.org.simpleframework.beans.factory.config.ConfigurableListableBeanFactory;
 import com.org.simpleframework.util.Assert;
-import com.org.simpleframework.util.ValidateUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
@@ -97,9 +95,9 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         this.beanDefinitionMap.forEach((beanName, beanDefinition) -> {
             Class<?> beanClass = beanDefinition.getBeanClass();
             if (type.isAssignableFrom(beanClass))
-                beans.put(beanName, (T)beanDefinition);
+                beans.put(beanName, (T) getBean(beanName));
         });
-        return null;
+        return beans;
     }
 
     @Override

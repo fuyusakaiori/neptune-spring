@@ -8,8 +8,4 @@ public interface HierarchicalBeanFactory extends BeanFactory {
 
     BeanFactory getParentBeanFactory();
 
-    /**
-     * <h3>本地工厂是否包含该原始对象</h3>
-     */
-    boolean containsLocalBean(String beanName);
 }

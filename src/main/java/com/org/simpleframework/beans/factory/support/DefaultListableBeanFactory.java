@@ -105,7 +105,7 @@ public class DefaultListableBeanFactory extends AbstractAutowireCapableBeanFacto
         this.beanDefinitionMap.forEach((beanName, beanDefinition) -> {
             // 注: 为什么不直接将 BeanDefinition 作为参数传入啊?
             if (beanDefinition.isSingleton())
-                getBean(beanName);
+                getBean(beanName, beanDefinition.getBeanClass());
         });
     }
 }

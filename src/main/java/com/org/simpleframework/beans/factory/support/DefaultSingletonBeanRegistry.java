@@ -63,9 +63,7 @@ public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
     }
 
     /**
-     * <h3>获取 Bean 实例</h3>
-     * <h3>1. 这个方法的主要目的还是从缓存中获取 Bean 实例, 并不真正负责创建 Bean 实例</h3>
-     * <h3>2. 因为如果没有工厂实例, 那么显然是无法创建实例的,  创建实例的方法是另外一个</h3>
+     * <h3>缓存中获取 Bean 实例</h3>
      * @param beanName Bean 的名字
      * @return Bean 实例
      */
@@ -95,9 +93,7 @@ public class DefaultSingletonBeanRegistry implements SingletonBeanRegistry {
     }
 
     /**
-     * <h3>获取 Bean 实例</h3>
-     * <h3>注: 如果提前知道 Bean 实例不在缓存中, 也没有对应的工厂, 那么就可以自己传入相应的工厂来创建实例</h3>
-     * <h3>注: 本质上负责创建 Bean 实例的对象的方法不在注册中心里面, 但是源码中提供了这么个方法</h3>
+     * <h3>创建 Bean 实例并放入缓存中</h3>
      * @param beanName Bean 的名字
      * @param objectFactory Bean 实例对应的工厂
      * @return Bean 实例

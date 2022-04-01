@@ -100,7 +100,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
         Object singletonObject = getSingleton(beanName);
         // 2. 如果返回不为空, 那么返回的可能是工厂对象, 也可能是单例对象本身, 所以直接调用实例化对象的方法
         if (singletonObject != null){
-            singletonObject = getObjectFonBeanInstance(beanName, singletonObject);
+            singletonObject = getObjectForBeanInstance(beanName, singletonObject);
         }else{
             // 3. 这里是检测采用原型模式创建的对象是否存在循环依赖的问题, spring 本身也没有解决这个问题, 只是抛出异常了
             // 注: 暂时不知道为什么 spring 不支持原型对象的循环依赖
@@ -139,7 +139,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
                 // 后置处理
                 afterPrototypeCreation(beanName);
                 // 工厂实例化
-                prototypeObject = getObjectFonBeanInstance(beanName, prototypeObject);
+                prototypeObject = getObjectForBeanInstance(beanName, prototypeObject);
                 return (T) prototypeObject;
             }else{
                 log.warn("当前暂时不支持其他形式创建实例的方式");
@@ -157,7 +157,7 @@ public abstract class AbstractBeanFactory extends DefaultSingletonBeanRegistry i
      * <h3>注: 不支持属性继承 (parent), 因为实在是太难写了, 这里中间会有合并继承的操作, 没有实现</h3>
      * <h3>注: 此外, 在利用工厂创建 Bean 实例的前后, 应该有相应的前后处理器, 也没有实现</h3>
      */
-    private Object getObjectFonBeanInstance(String beanName, Object beanInstance){
+    private Object getObjectForBeanInstance(String beanName, Object beanInstance){
         // TODO 1. 检查传入的原始对象的名称是否符合命名规范, 大意是这个, 但是确实没有看明白里面为什么会有返回值
 
         // 2. 检查当前原始对象是否为工厂对象, 如果不是直接返回, 如果是, 再用工厂对象创建

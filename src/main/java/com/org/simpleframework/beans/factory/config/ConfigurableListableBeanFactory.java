@@ -13,12 +13,6 @@ import com.org.simpleframework.beans.factory.ListableBeanFactory;
 public interface ConfigurableListableBeanFactory extends ListableBeanFactory, AutowireCapableBeanFactory, ConfigurableBeanFactory {
 
     /**
-     * <h3>添加 Bean 级别的后置处理器</h3>
-     * @param beanPostProcessor 后置处理器
-     */
-    void addBeanPostProcessor(BeanPostProcessor beanPostProcessor);
-
-    /**
      * <h3>实例化所有单例 Bean</h3>
      */
     void preInstanceSingleBean();

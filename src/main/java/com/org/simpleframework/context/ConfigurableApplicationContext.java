@@ -7,8 +7,9 @@ import java.io.Closeable;
 /**
  * <h2>提供初始化容器的方法</h2>
  */
-public interface ConfigurableApplicationContext extends ApplicationContext, Closeable
-{
+public interface ConfigurableApplicationContext extends ApplicationContext, Closeable {
+
+    String CONVERSION_SERVICE_BEAN_NAME = "conversionService";
 
     /**
      * <h3>启动容器: 核心方法</h3>

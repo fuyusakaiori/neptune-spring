@@ -8,9 +8,11 @@ import com.org.simpleframework.beans.factory.config.ConfigurableBeanFactory;
 import com.org.simpleframework.beans.factory.config.ConfigurableListableBeanFactory;
 import com.org.simpleframework.context.ApplicationContext;
 import com.org.simpleframework.context.ConfigurableApplicationContext;
+import com.org.simpleframework.core.covert.ConversionService;
 import com.org.simpleframework.core.io.DefaultResourceLoader;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -111,16 +113,15 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
     }
 
     /**
-     * <h3>调用后置处理器修改 BeanDefinition 实例</h3>
+     * <h3>将后置处理器实例化</h3>
      * @param beanFactory 内部容器实例
      */
     protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
-        // 1. 后置处理器对象会在此前被添加到注册中心, 但是暂时没有发现在哪里添加的
-        Map<String, BeanFactoryPostProcessor> postProcessorMap = getBeansOfType(BeanFactoryPostProcessor.class);
+        // 1. 后置处理器对象会在此前被添加到注册中心, 现在需要自己配置
+        Collection<BeanFactoryPostProcessor> processors = beanFactory.getBeansOfType(BeanFactoryPostProcessor.class).values();
         // 2. 遍历并执行后置处理器
-        for (Map.Entry<String, BeanFactoryPostProcessor> entry : postProcessorMap.entrySet()) {
-            log.debug(entry.getKey() + "\t正在执行");
-            entry.getValue().postProcessBeanFactory(beanFactory);
+        for (BeanFactoryPostProcessor processor : processors) {
+            processor.postProcessBeanFactory(beanFactory);
         }
     }
 
@@ -129,10 +130,11 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
      * @param beanFactory 内部容器
      */
     protected void registerBeanPostProcessor(ConfigurableListableBeanFactory beanFactory) {
-        Map<String, BeanPostProcessor> beanPostProcessorMap = getBeansOfType(BeanPostProcessor.class);
+        Map<String, BeanPostProcessor> beanPostProcessorMap = beanFactory.getBeansOfType(BeanPostProcessor.class);
         for (Map.Entry<String, BeanPostProcessor> entry : beanPostProcessorMap.entrySet()) {
             log.debug(entry.getKey() + "被添加到容器中");
-            beanFactory.addBeanPostProcessor(entry.getValue());
+            BeanPostProcessor processor = entry.getValue();
+            beanFactory.addBeanPostProcessor(processor);
         }
     }
 
@@ -146,8 +148,13 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
     }
 
     protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
-        // 1. TODO 设置类型转换器
-
+        // 1. 设置类型转换器
+        if (beanFactory.containsBean(CONVERSION_SERVICE_BEAN_NAME)){
+            Object conversionService = beanFactory.getBean(CONVERSION_SERVICE_BEAN_NAME);
+            if (conversionService instanceof ConversionService){
+                beanFactory.setConversionService((ConversionService) conversionService);
+            }
+        }
         // 2. 实例化单例 Bean
         beanFactory.preInstanceSingleBean();
     }
@@ -193,16 +200,10 @@ public abstract class AbstractApplicationContext extends DefaultResourceLoader i
         return null;
     }
 
-    @Override
-    public boolean containsLocalBean(String beanName)
-    {
-        return false;
-    }
 
     @Override
-    public <T> Map<String, T> getBeansOfType(Class<T> type)
-    {
-        return null;
+    public <T> Map<String, T> getBeansOfType(Class<T> type) {
+        return getBeanFactory().getBeansOfType(type);
     }
 
     @Override

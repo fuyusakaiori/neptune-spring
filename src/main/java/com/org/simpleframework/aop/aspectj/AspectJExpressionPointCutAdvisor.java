@@ -2,6 +2,7 @@ package com.org.simpleframework.aop.aspectj;
 
 import com.org.simpleframework.aop.PointCut;
 import com.org.simpleframework.aop.PointCutAdvisor;
+import com.org.simpleframework.injection.annotation.Autowired;
 import org.aopalliance.aop.Advice;
 
 /**
@@ -12,6 +13,7 @@ public class AspectJExpressionPointCutAdvisor implements PointCutAdvisor {
 
     private volatile AspectJExpressionPointCut pointCut;
 
+    @Autowired
     private Advice advice;
 
     private String expression;

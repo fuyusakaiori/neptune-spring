@@ -9,6 +9,7 @@ import com.org.simpleframework.beans.exception.BeansException;
 import com.org.simpleframework.beans.factory.Aware;
 import com.org.simpleframework.beans.factory.BeanFactoryAware;
 import com.org.simpleframework.beans.factory.BeanNameAware;
+import com.org.simpleframework.beans.factory.ObjectFactory;
 import com.org.simpleframework.beans.factory.config.*;
 import com.org.simpleframework.core.covert.ConversionService;
 
@@ -17,7 +18,8 @@ import java.lang.reflect.Type;
 /**
  * <h2>实现类的创建</h2>
  * <h3>1. 负责空属性的 Bean 实例创建</h3>
- * <h3>2. </h3>
+ * <h3>2. 负责单例 Bean 的属性注入</h3>
+ * <h3>注: 基本可以认为 Bean 的实例化和初始化都是在这个阶段完成的</h3>
  */
 public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFactory implements AutowireCapableBeanFactory {
 
@@ -29,19 +31,13 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     //================================================ 创建实例 ================================================
     @Override
     protected Object createBean(String beanName, BeanDefinition beanDefinition) {
-        // TODO 1. 获取 Bean 实例对应的 Class 对象
-        Class<?> resolvedClass = resolveBeanClass(beanDefinition, beanName);
+        // 1. 获取 Bean 实例对应的 Class 对象
 
         // 2. 创建副本设置 Class 对象
-        if (resolvedClass != null && !beanDefinition.hasBeanClass()){
-            // 注: 副本的目的主要是为了热部署
-            beanDefinition = new GenericBeanDefinition();
-            beanDefinition.setBeanClass(resolvedClass);
-        }
 
         // 注: 方法重写不去实现 (look-up replace-method)
 
-        // TODO 3. 如果对象存在代理类, 那么直接返回代理类, 也就是给 AOP 机会
+        // 3. 如果对象存在代理类, 那么直接返回代理类, 也就是给 AOP 机会
         Object beanProxy = resolveBeforeInstantiation(beanName, beanDefinition);
         // 4. 如果代理不为空, 那么就直接返回代理类, 不再去创建实例
         if (beanProxy != null)
@@ -75,7 +71,6 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
                     return proxyBean;
             }
         }
-
         return null;
     }
 
@@ -92,21 +87,21 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
 
         // 1. 创建 Bean 实例
         bean = createBeanInstance(beanName, beanDefinition);
+        // ================================ 对象实例化结束 ================================
 
         // 2. 解决循环依赖: 提前将没有设置属性的对象放入二级缓存中, 实际放入一级缓存中就能解决
-        // 注: 如果是单例才会解决循环依赖, 如果是原型, 那么之前就会报错, 如果没有报错, 那么显然不需要处理循环依赖
+        // ================================ 处理循环依赖 ================================
         if (beanDefinition.isSingleton()){
             final Object finalBean = bean;
-            addSingletonFactory(beanName, ()-> getEarlyBeanReference(beanName, beanDefinition, finalBean));
+            addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, beanDefinition, finalBean));
         }
 
         boolean continueWithPropertyPopulation = applyBeanPostProcessorAfterInstantiation(beanName, bean);
-        if (continueWithPropertyPopulation)
+        if (!continueWithPropertyPopulation)
             return bean;
         // 3. 给 Bean 实例注入属性: 源码中是在注入属性的方法中去进行后置处理的, 而提出来也是可以的
         try {
             // 4. 注入属性之前, 修改属性, 或者叫包装属性, 源码中也被包装到注入属性的方法中了
-            applyBeanPostProcessorBeforeApplyingPropertyValues(beanName, bean, beanDefinition);
             populateBean(beanName, beanDefinition, bean);
             bean = initializationBean(bean, beanName, beanDefinition);
         }
@@ -136,8 +131,10 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     }
 
     /**
-     * <h3>返回二级缓存中的实例</h3>
-     * <h3>注: 封装这个方法的主要目的还是为了后置处理这个半成品的类, 提高可用性</h3>
+     * <h3>对提前暴露的引用进行动态代理</h3>
+     * <h3>1. 如果循环依赖和动态代理同时存在的话, 直接将目标对象放入缓存是有问题的</h3>
+     * <h3>2. 循环依赖的对象从缓存中获取到的对象是没有代理的对象, 确实可以解决循环依赖, 但是拿到的对象可能存在问题</h3>
+     * <h3>3. 因为原来的对象是会在执行初始化方法之后进行动态代理的, 也就造成缓存中的对象和实际的对象不一致, 所以放入缓存前需要动态代理</h3>
      * @param beanName Bean 名字
      * @param beanDefinition BeanDefinition 实例
      * @param finalBean 半成品
@@ -167,7 +164,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
         for (BeanPostProcessor beanPostProcessor : getBeanPostProcessors()) {
             if (beanPostProcessor instanceof InstantiationAwareBeanPostProcessor){
                 // 注: 如果在包装之后, 不打算继续处理, 那么就退出
-                if (((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessAfterInstantiation(bean, beanName)){
+                if (!((InstantiationAwareBeanPostProcessor) beanPostProcessor).postProcessAfterInstantiation(bean, beanName)){
                     continueWithPropertyPopulation = false;
                     break;
                 }
@@ -203,8 +200,8 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
      * @param beanDefinition BeanDefinition 实例
      */
     protected void populateBean(String beanName, BeanDefinition beanDefinition, Object bean) {
-        // TODO 1. 判断是否需要进行后置处理, 如果需要进入循环
-
+        // 1. 判断是否需要进行后置处理, 如果需要进入循环
+        applyBeanPostProcessorBeforeApplyingPropertyValues(beanName, bean, beanDefinition);
         // 2. 如果不需要或者后置处理完成, 那么就直接开始属性注入
         if(beanDefinition.hasPropertyValues()){
             applyPropertyValues(beanName, bean, beanDefinition, beanDefinition.getPropertyValues());
@@ -218,8 +215,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
      * @param beanDefinition BeanDefinition 实例
      */
     protected void applyPropertyValues(String beanName, Object bean, BeanDefinition beanDefinition, PropertyValues propertyValues) {
-        try
-        {
+        try {
             // 1. 如果属性集合汇总为空, 那么直接返回
             if (propertyValues.isEmpty())
                 return;
@@ -234,6 +230,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
                 }else{
                     // 4. 如果不是引用类型, 那么就考虑是否执行类型转换
                     Class<?> sourceType = value.getClass();
+                    // 注: 配置文件中的 value 属性被读取进来之后是字符串类型, 而不是我们想象中的整型, 所以是需要类型转换的
                     Class<?> targetType = (Class<?>) TypeUtil.getFieldType(bean.getClass(), name);
                     // 注: 如果原有的属性类型和实例中的实际类型不同, 那么就要进行类型转换
                     ConversionService conversionService = getConversionService();
@@ -245,7 +242,7 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
                         }
                     }
                 }
-                // 注: 这里调用的方法不是 JDK 自带的
+                // 注: 这里注入的原理之后会详细解释
                 BeanUtil.setFieldValue(bean, name, value);
             }
         }
@@ -306,15 +303,35 @@ public abstract class AbstractAutowireCapableBeanFactory extends AbstractBeanFac
     }
 
 
+    /**
+     * <h3>初始化前的处理: 可以执行动态代理</h3>
+     * @param bean Bean 实例
+     * @param beanName Bean 实例名字
+     * @return 代理对象
+     */
     @Override
     public Object applyBeanPostProcessorBeforeInitialization(Object bean, String beanName) throws BeanException {
-        return null;
+        Object existingBean = bean;
+        for (BeanPostProcessor processor : getBeanPostProcessors()) {
+            Object proxy = processor.postProcessBeforeInitialization(beanName, bean);
+            // 注: 方法的默认返回就是原对象, 所以如果返回对象为空, 那么肯定有问题
+            if (proxy == null)
+                return existingBean;
+            existingBean = proxy;
+        }
+        return existingBean;
     }
 
     @Override
-    public Object applyBeanPostProcessorAfterInitialization(Object bean, String beanName) throws BeanException
-    {
-        return null;
+    public Object applyBeanPostProcessorAfterInitialization(Object bean, String beanName) throws BeanException {
+        Object existingBean = bean;
+        for (BeanPostProcessor processor : getBeanPostProcessors()) {
+            Object proxy = processor.postProcessAfterInitialization(beanName, bean);
+            if (proxy == null)
+                return existingBean;
+            existingBean = proxy;
+        }
+        return existingBean;
     }
 
 
